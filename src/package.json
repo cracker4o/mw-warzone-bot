@@ -1,0 +1,30 @@
+{
+  "name": "mw-warzone-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot for MW stats",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cracker4o/mw-warzone-bot.git"
+  },
+  "keywords": [
+    "Modern",
+    "Warfare",
+    "MW",
+    "Warzone"
+  ],
+  "author": "Tosho Toshev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cracker4o/mw-warzone-bot/issues"
+  },
+  "homepage": "https://github.com/cracker4o/mw-warzone-bot#readme",
+  "devDependencies": {
+    "call-of-duty-api": "^1.2.14",
+    "discord.js": "^12.2.0",
+    "winston": "^2.4.4"
+  }
+}

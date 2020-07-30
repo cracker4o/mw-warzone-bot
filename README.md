@@ -33,6 +33,7 @@ To check Modern Warfare user statistics please use the following command:
 !mw {platform} {username}
 ```
 The {platform} placeholder supports the following values:
-pc
 psn
 xbl
+battle (Battle.net)
+uno (activision ID)
