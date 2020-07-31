@@ -13,13 +13,16 @@ logger.level = 'debug';
 
 // Initialize the Discord Bot
 const bot = new Discord.Client();
+let loggedIn = false;
 
-
+/**
+ * Shows the available commands
+ */
 function showHelp(message) {
     const helpRegex = /^\!mw (help|commands)(.*)?$/;
     const helpMatches = message.content.match(helpRegex);
     if (helpMatches) {
-        const embed = new Discord.RichEmbed();
+        const embed = new Discord.MessageEmbed();
         embed.setTitle('Modern Warfare bot commands:')
             .setColor(0x00AE86)
             .setDescription('You can get info about your user and some additional global stats by using the following commands')
@@ -34,29 +37,16 @@ function showHelp(message) {
             Example:
             !mw battle cracky#123456
             `)
-            .addBlankField(true)
             .setFooter(
             `The MW Api uses data from the callofduty.com API`)
         message.channel.send({embed});
     }
 }
 
-
 /**
- * This event is triggered when the mw-warzone-bot is connected to the Discord server.
+ * Gets user's stats
  */
-bot.on('ready', function () {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(`${bot.user.username}-(${bot.user.id})`);
-});
-
-/**
- * This event is triggered when the mw-warzone-bot receives a message.
- */
-bot.on('message', function (message) {
-    showHelp(message);
-
+function getUserStats(message) {
     const regex = /^\!mw (battle|psn|xbl|uno) (.*)$/;
     const matches = message.content.match(regex);
     if (!matches) {
@@ -65,8 +55,51 @@ bot.on('message', function (message) {
 
     const platform = matches[1];
     const username = matches[2];
-    
-    // TODO make the API calls using the call-of-duty-api-es6
+
+    if (!API.platforms[platform]) {
+        logger.warn('Invalid platform');
+        return;
+    }
+
+    API.MWstats(username, API.platforms[platform])
+        .then((output) => {
+            logger.info(JSON.stringify(output));
+            const embed = new Discord.MessageEmbed();
+            embed.setTitle(`Modern Warfare stats for user: ${username}`)
+                .setColor(0x00AE86)
+                .setDescription('User Stats:')
+                .addField("Warzone", JSON.stringify(output.lifetime.mode.br_all))
+            message.channel.send({embed});
+        }).catch((err) => {
+            logger.error(err);
+        });
+
+}
+
+/**
+ * This event is triggered when the mw-warzone-bot is connected to the Discord server.
+ */
+bot.on('ready', function () {
+    logger.info('Connected');
+    logger.info('Logged in as: ');
+    logger.info(`${bot.user.username}-(${bot.user.id})`);
+
+    // The CoD API requires a login from a dummy account.
+    // This prevents the CoD servers from throttling requests.
+    API.login(auth.mwUser, auth.mwPassword).then(() => {
+        loggedIn = true;
+    }).catch((error) => {
+        loggedIn = false;
+        logger.error(error);
+    });
+});
+
+/**
+ * This event is triggered when the mw-warzone-bot receives a message.
+ */
+bot.on('message', function (message) {
+    showHelp(message);
+    getUserStats(message);
 });
 
 // Login the mw-warzone-bot to all registered Discord servers.
