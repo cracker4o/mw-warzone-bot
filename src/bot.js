@@ -19,7 +19,7 @@ let loggedIn = false;
  * Shows the available commands
  */
 function showHelp(message) {
-    const helpRegex = /^\!mw (help|commands)(.*)?$/;
+    const helpRegex = /^!mw (help|commands)(.*)?$/;
     const helpMatches = message.content.match(helpRegex);
     if (helpMatches) {
         const embed = new Discord.MessageEmbed();
@@ -101,6 +101,8 @@ bot.on('message', function (message) {
     showHelp(message);
     getUserStats(message);
 });
+
+bot.on('debug', logger.debug);
 
 // Login the mw-warzone-bot to all registered Discord servers.
 bot.login(auth.token);
