@@ -28,7 +28,7 @@ In discord you can type the following to check what commands does the bot suppor
 !mw help
 ```
 
-To check Modern Warfare user statistics please use the following command:
+To check Modern Warfare Warzone user statistics please use the following command:
 ```
 !mw {platform} {username}
 ```
@@ -37,3 +37,31 @@ psn
 xbl
 battle (Battle.net)
 uno (activision ID)
+
+To check the user stats for a specific game mode you can use the following command:
+```
+!mw {platform} {username} {mode}
+```
+
+The mode can be one of the following:
+"gun",
+"dom",
+"war",
+"hq",
+"hc_dom",
+"hc_conf",
+"koth",
+"conf",
+"hc_hq",
+"arena",
+"br_dmz",
+"br",
+"sd",
+"grnd",
+"cyber",
+"hc_war",
+"br_all",
+"hc_sd",
+"arm",
+"hc_cyber",
+"infect"
