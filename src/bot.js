@@ -65,10 +65,47 @@ function getUserStats(message) {
         .then((output) => {
             logger.info(JSON.stringify(output));
             const embed = new Discord.MessageEmbed();
+            const lifetime = output.lifetime.all.properties;
             embed.setTitle(`Modern Warfare stats for user: ${username}`)
                 .setColor(0x00AE86)
                 .setDescription('User Stats:')
                 .addField("Warzone", JSON.stringify(output.lifetime.mode.br_all))
+                .addFields(
+                    { name: "Level", value: output.level, inline: true },
+                    {
+                      name: "Time played",
+                      value: `${(lifetime.timePlayedTotal / 3600).toFixed(2)}h`,
+                      inline: true,
+                    },
+                    {
+                      name: "Best KD",
+                      value: lifetime.bestKD,
+                      inline: true,
+                    },
+                    { name: "K/D", value: lifetime.kdRatio.toFixed(2), inline: true },
+                    { name: "W/L", value: lifetime.wlRatio.toFixed(2), inline: true },
+                    {
+                      name: "Acc",
+                      value: `${lifetime.accuracy.toFixed(2)}%`,
+                      inline: true,
+                    },
+                    { name: "Kills", value: lifetime.kills, inline: true },
+                    {
+                      name: "Headshots",
+                      value: `${lifetime.headshots} (${(
+                        (lifetime.headshots / lifetime.kills) *
+                        100
+                      ).toFixed(2)}%)`,
+                      inline: true,
+                    },
+                    { name: "Best killstreak", value: lifetime.bestKillStreak, inline: true },
+                    {
+                      name: "Most kills in a game",
+                      value: lifetime.bestKills,
+                      inline: true,
+                    },
+                    { name: "Most deaths in a game", value: lifetime.recordDeathsInAMatch }
+                );
             message.channel.send({embed});
         }).catch((err) => {
             logger.error(err);
