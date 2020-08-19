@@ -47,14 +47,15 @@ function showHelp(message) {
  * Gets user's stats
  */
 function getUserStats(message) {
-    const regex = /^\!mw (battle|psn|xbl|uno) (.*)$/;
+    const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
     const matches = message.content.match(regex);
     if (!matches) {
         return;
     }
 
     const platform = matches[1];
-    const username = matches[2];
+    const mode = matches[2] != null ? matches[2].trim() : 'br_all';
+    const username = matches[3];
 
     if (!API.platforms[platform]) {
         logger.warn('Invalid platform');
@@ -69,7 +70,7 @@ function getUserStats(message) {
             embed.setTitle(`Modern Warfare stats for user: ${username}`)
                 .setColor(0x00AE86)
                 .setDescription('User Stats:')
-                .addField("Warzone", JSON.stringify(output.lifetime.mode.br_all))
+                .addField("Warzone", JSON.stringify(output.lifetime.mode[mode].properties))
                 .addFields(
                     { name: "Level", value: output.level, inline: true },
                     {
