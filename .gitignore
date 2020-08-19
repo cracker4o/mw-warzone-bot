@@ -105,3 +105,4 @@ dist
 
 *.iml
 .idea
+src/auth.json
