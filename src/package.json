@@ -26,5 +26,8 @@
     "call-of-duty-api": "^1.2.14",
     "discord.js": "^12.2.0",
     "winston": "^2.4.4"
+  },
+  "dependencies": {
+    "sqlite3": "^5.0.0"
   }
 }

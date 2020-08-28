@@ -3,6 +3,7 @@ const logger = require('winston');
 const auth = require('./auth.json');
 const fetch = require('node-fetch');
 const API = require('call-of-duty-api')();
+const sqlite3 = require('sqlite3').verbose();
 
 // Configure the console logger settings
 logger.remove(logger.transports.Console);
@@ -14,6 +15,25 @@ logger.level = 'debug';
 // Initialize the Discord Bot
 const bot = new Discord.Client();
 let loggedIn = false;
+
+// Initialize database
+let db = new sqlite3.Database('./user.db', (err) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    logger.debug('Connected to the SQlite database.');
+  });
+
+initTables();
+
+process.on('exit', function(code) {
+    db.close((err) => {
+        if (err) {
+          return console.error(err.message);
+        }
+        console.log('Close the database connection.');
+      });
+})
 
 /**
  * Shows the available commands
@@ -47,15 +67,31 @@ function showHelp(message) {
  * Gets user's stats
  */
 function getUserStats(message) {
-    const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
-    const matches = message.content.match(regex);
-    if (!matches) {
+    const botRegex = /^\!mw/;
+    const botMatches = message.content.match(botRegex);
+    if (!botMatches) {
         return;
     }
 
-    const platform = matches[1];
-    const mode = matches[2] != null ? matches[2].trim() : 'br_all';
-    const username = matches[3];
+    const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
+    const matches = message.content.match(regex);
+    
+    var platform, mode, username;
+    if (matches) {
+        platform = matches[1];
+        mode = matches[2] != null ? matches[2].trim() : 'br_all';
+        username = matches[3];
+    } else {
+        getUser(message).then((user) => {
+            if (!user) {
+                return;
+            } else {
+                platform = user.platform;
+                username = user.username;
+                mode = 'lifetime';
+            }
+        })
+    }
 
     if (!API.platforms[platform]) {
         logger.warn('Invalid platform');
@@ -70,6 +106,9 @@ function getUserStats(message) {
                 case 'lifetime':
                     const messageEmbed = getLifetimeStats(output);
                     message.channel.send(messageEmbed);
+                    return;
+                case 'set':
+                    storeUser(message, platform, username);
                     return;
                 default:
 
@@ -235,6 +274,38 @@ const items = {
     iw8_me_akimboblunt: 'Kali Sticks',
     iw8_me_akimboblades: 'Dual Kodachis',
     iw8_knife: 'Combat Knife'
+}
+
+function initTables() {
+    db.run(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, user TEXT NOT NULL, number TEXT NOT NULL, platform TEXT NOT NULL, username TEXT NOT NULL)`)
+}
+
+function storeUser(message, platform, username) {
+    db.run(`INSERT OR REPLACE INTO users(id, user, number, platform, username) VALUES(?, ?, ?, ?, ?)`, [message.author.id, message.author.username, message.author.discriminator, platform, username], function (err) {
+        if (err) {
+            message.channel.send(new Discord.MessageEmbed()
+                .setColor(0x00AE86)
+                .setTitle('Error saving user')
+                .setDescription(err.message))
+        } else {
+            message.channel.send(new Discord.MessageEmbed()
+                .setColor(0x00AE86)
+                .setDescription(`Associated ${platform} user ${username} with Discord user ${message.author.username}#${message.author.discriminator}`));
+        }
+    });
+}
+
+function getUser(message) {
+    return new Promise((resolve, reject) => {
+        db.get(`SELECT platform, username FROM users WHERE id = ?`, [message.author.id], (err, row) => {
+            if (err) {
+                console.error(err.message);
+                reject(err.message);
+            } else {
+                resolve(row);
+            }
+        });
+    });
 }
 
 /**
