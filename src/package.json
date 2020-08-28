@@ -4,6 +4,8 @@
   "description": "A Discord bot for MW stats",
   "main": "bot.js",
   "scripts": {
+    "build": "webpack --mode development",
+    "bot": "npm run build && node ./dist/bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,11 +25,20 @@
   },
   "homepage": "https://github.com/cracker4o/mw-warzone-bot#readme",
   "devDependencies": {
-    "call-of-duty-api": "^1.2.14",
+    "@babel/core": "^7.11.4",
+    "@babel/preset-env": "^7.11.0",
+    "babel-loader": "^8.1.0",
+    "call-of-duty-api-es6": "0.0.7",
     "discord.js": "^12.2.0",
+    "encoding": "^0.1.13",
+    "node-fetch": "^2.6.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
     "winston": "^2.4.4"
   },
   "dependencies": {
-    "sqlite3": "^5.0.0"
+    "@babel/runtime": "^7.11.2",
+    "core-js": "^3.6.5",
+    "ffmpeg-static": "^4.2.7"
   }
 }

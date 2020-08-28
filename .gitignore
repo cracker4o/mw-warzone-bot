@@ -106,4 +106,6 @@ dist
 *.iml
 .idea
 src/auth.json
+
+dist/
 *.db
