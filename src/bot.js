@@ -1,6 +1,7 @@
 import logger from 'winston';
 import {Client, MessageEmbed} from 'discord.js';
 import {MWStats} from './components/mw-stats';
+import {UserDB} from './components/user-db';
 import { api, platforms } from 'call-of-duty-api-es6';
 
 const auth = require('./auth.json');
@@ -15,25 +16,6 @@ logger.level = 'debug';
 // Initialize the Discord Bot
 const bot = new Client();
 let loggedIn = false;
-
-// Initialize database
-let db = new sqlite3.Database('./user.db', (err) => {
-    if (err) {
-      return console.error(err.message);
-    }
-    logger.debug('Connected to the SQlite database.');
-  });
-
-initTables();
-
-process.on('exit', function(code) {
-    db.close((err) => {
-        if (err) {
-          return console.error(err.message);
-        }
-        console.log('Close the database connection.');
-      });
-})
 
 /**
  * Shows the available commands
@@ -67,15 +49,17 @@ const showHelp = (message) => {
  * Gets user's stats
  */
 const getUserStats = async (message) => {
-    const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
-    const matches = message.content.match(regex);
-    if (!matches) {
+    const botRegex = /^\!mw/;
+    const botMatches = message.content.match(botRegex);
+    if (!botMatches) {
         return;
     }
+   
+    const data = await determineUserAndPlatform(message);
 
-    const platform = matches[1];
-    const mode = matches[2] != null ? matches[2].trim() : 'br_all';
-    const username = matches[3];
+    const platform = data.platform;
+    const mode = data.mode;
+    const username = data.username;
     
     if (!platforms[platform]) {
         logger.warn('Invalid platform');
@@ -107,36 +91,46 @@ const getUserStats = async (message) => {
     }
 }
 
-function initTables() {
-    db.run(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, user TEXT NOT NULL, number TEXT NOT NULL, platform TEXT NOT NULL, username TEXT NOT NULL)`)
-}
+const determineUserAndPlatform = async (message) => {
+    const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
+    const matches = message.content.match(regex);
+    if (matches) {
+        return {
+            platform: matches[1],
+            mode: matches[2] != null ? matches[2].trim() : 'br_all',
+            username: matches[3]
+        };
+    }
 
-function storeUser(message, platform, username) {
-    db.run(`INSERT OR REPLACE INTO users(id, user, number, platform, username) VALUES(?, ?, ?, ?, ?)`, [message.author.id, message.author.username, message.author.discriminator, platform, username], function (err) {
-        if (err) {
-            message.channel.send(new Discord.MessageEmbed()
-                .setColor(0x00AE86)
-                .setTitle('Error saving user')
-                .setDescription(err.message))
-        } else {
-            message.channel.send(new Discord.MessageEmbed()
-                .setColor(0x00AE86)
-                .setDescription(`Associated ${platform} user ${username} with Discord user ${message.author.username}#${message.author.discriminator}`));
+    const storedUserRegex = /^\!mw (.*)$/;
+    const matchesStoredUser = message.content.match(storedUserRegex);
+    if (matchesStoredUser) {
+        const userDb = new UserDB();
+        const storedUser = await userDb.getUser(message);
+        if (storedUser) {
+            return {
+                platform: storedUser.platform,
+                mode: matchesStoredUser[1] != null ? matchesStoredUser[1].trim() : 'br_all',
+                username: storedUser.username
+            };
         }
-    });
+    }
+
+    
+    return null;
 }
 
-function getUser(message) {
-    return new Promise((resolve, reject) => {
-        db.get(`SELECT platform, username FROM users WHERE id = ?`, [message.author.id], (err, row) => {
-            if (err) {
-                console.error(err.message);
-                reject(err.message);
-            } else {
-                resolve(row);
-            }
-        });
-    });
+const saveUser = async (message) => {
+    const regex = /^\!mw (battle|psn|xbl|uno) (set) (.*)$/;
+    const matches = message.content.match(regex);
+    if (!matches) {
+        return;
+    }
+    const platform = matches[1];
+    const username = matches[3];
+    const userDb = new UserDB();
+    await userDb.storeUser(message, platform, username);
+    return true;
 }
 
 /**
@@ -166,7 +160,9 @@ bot.on('ready', async () => {
  */
 bot.on('message', async (message) => {
     showHelp(message);
-    await getUserStats(message);
+    if (!await saveUser(message)) {
+        await getUserStats(message);
+    }
 });
 
 bot.on('debug', logger.debug);
