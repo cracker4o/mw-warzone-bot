@@ -66,6 +66,18 @@ The mode can be one of the following:
 "hc_cyber",
 "infect"
 
+# Associate Users
+
+Users in Discord can associate themselves with their platform user by using the following command:
+```
+!mw {platform} set {username}
+```
+This will allow the use of all of the bot's commands without having to input your user and platform each time.
+e.g.:
+```
+!mw br
+```
+
 [Node-CallOfDuty-es6]: https://github.com/Lierrmm/Node-CallOfDuty-es6
 [Discord developer portal]: https://discordapp.com/developers/applications/
 [Here is a good tutorial how to do it]: https://discordpy.readthedocs.io/en/rewrite/discord.html
