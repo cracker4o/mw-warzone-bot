@@ -27,22 +27,14 @@ const showHelp = (message) => {
         const embed = new MessageEmbed();
         embed.setTitle('Modern Warfare bot commands:')
             .setColor(0x00AE86)
-            .setDescription('You can get info about your user and some additional global stats by using the following commands')
-            .addField('!mw {platform} {username}',
-                `
-            where the {platform} placeholder can be:
-            psn
-            xbl
-            battle
-            uno (activision ID)
-            and the {username} placeholder is your MW user name.
-            Example:
-            !mw battle cracky#123456
-            `)
-            .setFooter(
-                `The MW Api uses data from the callofduty.com API`)
+            .setDescription('MW Bot lets you get info about your user and some additional global stats')
+            .setURL('https://github.com/cracker4o/mw-warzone-bot')
+            .addField(`Check out the GitHub README for how to use the bot`)
+            .setFooter(`The MW Api uses data from the callofduty.com API`)
         message.channel.send({ embed });
+        return true;
     }
+    return false;
 }
 
 /**
@@ -57,6 +49,13 @@ const getUserStats = async (message) => {
    
     const data = await determineUserAndPlatform(message);
 
+    if (!data) {
+        message.channel.send(new MessageEmbed()
+            .setColor(0x00AE86)
+            .setDescription(`No association found for ${message.author.username}#${message.author.discriminator}. Use '!mw <platform> set <username>' to associate yourself.`));
+        return;
+    }
+
     const platform = data.platform;
     const mode = data.mode;
     const username = data.username;
@@ -65,10 +64,12 @@ const getUserStats = async (message) => {
         logger.warn('Invalid platform');
         return;
     }
+    
+    logger.debug(`getting ${platform} ${mode} stats for ${username}`);
 
     try {
         const data = await API.MWstats(username, platforms[platform]);
-        logger.info(JSON.stringify(data));
+        // logger.info(JSON.stringify(data));
 
         switch (mode) {
             case 'lifetime':
@@ -102,7 +103,7 @@ const determineUserAndPlatform = async (message) => {
         };
     }
 
-    const storedUserRegex = /^\!mw (.*)$/;
+    const storedUserRegex = /^\!mw(.*)$/;
     const matchesStoredUser = message.content.match(storedUserRegex);
     if (matchesStoredUser) {
         const userDb = new UserDB();
@@ -110,12 +111,11 @@ const determineUserAndPlatform = async (message) => {
         if (storedUser) {
             return {
                 platform: storedUser.platform,
-                mode: matchesStoredUser[1] != null ? matchesStoredUser[1].trim() : 'br_all',
+                mode: matchesStoredUser[1] ? matchesStoredUser[1].trim() : 'br_all',
                 username: storedUser.username
             };
         }
     }
-
     
     return null;
 }
@@ -159,7 +159,9 @@ bot.on('ready', async () => {
  * This event is triggered when the mw-warzone-bot receives a message.
  */
 bot.on('message', async (message) => {
-    showHelp(message);
+    if (showHelp(message)) {
+        return;
+    }
     if (!await saveUser(message)) {
         await getUserStats(message);
     }
