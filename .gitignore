@@ -108,4 +108,5 @@ dist
 src/auth.json
 
 dist/
+.vscode/
 *.db
