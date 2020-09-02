@@ -110,3 +110,5 @@ src/auth.json
 dist/
 .vscode/
 *.db
+
+auth.json
