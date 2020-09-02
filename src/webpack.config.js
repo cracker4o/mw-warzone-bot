@@ -8,7 +8,7 @@ module.exports = {
         fs: 'empty'
     },
     resolve: {
-        extensions: ['.js', '.json'],
+        extensions: ['.js', '.json', '.ts'],
         mainFields: ["main"]
     },
     output: {
