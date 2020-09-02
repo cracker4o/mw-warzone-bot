@@ -1,4 +1,4 @@
-import {MessageEmbed} from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 
 export class MWStats {
     constructor() {
@@ -75,7 +75,41 @@ export class MWStats {
             iw8_me_akimboblunt: 'Kali Sticks',
             iw8_me_akimboblades: 'Dual Kodachis',
             iw8_knife: 'Combat Knife'
+        };
+
+        this.modes = {
+            gun: 'Gun Fight',
+            dom: 'Domination',
+            war: 'Team Deathmatch',
+            hq: 'Headquarters',
+            hc_dom: 'Domination Hardcore',
+            hc_conf: 'Kill Confirmed Hardcore',
+            koth: 'Hardpoint',
+            conf: 'Kill Confirmed',
+            hc_hq: 'Headquarters Hardcore',
+            arena: '2v2',
+            br_dmz: 'Plunder',
+            br: 'Warzone',
+            sd: 'Search and Destroy',
+            grnd: 'Grind',
+            cyber: 'Cyber Attack',
+            hc_war: 'Team Deathmatch Hardcore',
+            br_all: 'Warzone',
+            hc_sd: 'Search and Destroy Hardcore',
+            arm: 'Ground War',
+            hc_cyber: 'Cyber Attack Hardcore',
+            infect: 'Infected'
+        };
+    }
+
+    getModes() {
+        let embed = new MessageEmbed()
+            .setColor(0x00AE86)
+            .setTitle('Valid Gamemodes:');
+        for (const [key, value] of Object.entries(this.modes)) {
+            embed.addField(key, value, true);
         }
+        return embed;
     }
 
     getWeaponMostKills(data) {
@@ -154,7 +188,112 @@ export class MWStats {
                 {
                     name: 'Most Used Weapon', value: `${weaponMostKills.weapon} (${weaponMostKills.kills} kills)`, inline: true
                 },
-    
             )
     };
+
+    /**
+     * Gets the stats for a MW user for a specific mode
+     * @param {*} data JSON data object
+     */
+    getStatsForMode(data, mode) {
+
+        const props = data.lifetime.mode[mode].properties;
+
+        const embed = new MessageEmbed()
+            .setColor(0x00AE86)
+            .setTitle(`${data.username}\'s ${this.modes[mode]} Stats`);
+
+        if (props.hasOwnProperty('wins')) {
+            embed.addField('Wins', `${props.wins} (${(props.wins/props.gamesPlayed).toFixed(2)} %)`, true);
+        }
+
+        if (props.hasOwnProperty('topFive')) {
+            embed.addField('Top 5', `${props.topFive} (${(props.topFive/props.gamesPlayed).toFixed(2)} %)`, true);
+        }
+
+        if (props.hasOwnProperty('topTen')) {
+            embed.addField('Top 10', `${props.topTen} (${(props.topTen/props.gamesPlayed).toFixed(2)} %)`, true);
+        }
+
+        if (props.hasOwnProperty('topTwentyFive')) {
+            embed.addField('Top 25', `${props.topTwentyFive} (${(props.topTwentyFive/props.gamesPlayed).toFixed(2)} %)`, true);
+        }
+
+        if (props.hasOwnProperty('cash')) {
+            embed.addField('Cash', props.cash, true);
+        }
+
+        embed.addFields(
+            {
+                name: 'Time Played', value: `${(props.timePlayed / 3600).toFixed(2)}h`, inline: true
+            },
+            {
+                name: 'K/D', value: props.kdRatio.toFixed(2), inline: true
+            },
+            {
+                name: 'Kills', value: props.kills, inline: true
+            },
+            {
+                name: 'Score/min', value: `${props.scorePerMinute.toFixed(0)}`, inline: true
+            }
+        );
+
+        if (props.hasOwnProperty('downs')) {
+            embed.addField('Downs', props.downs, true);
+        }
+
+        if (props.hasOwnProperty('revives')) {
+            embed.addField('Revives', props.revives, true);
+        }
+
+        if (props.hasOwnProperty('contracts')) {
+            embed.addField('Contracts', props.contracts, true);
+        }
+
+        if (props.hasOwnProperty('setBacks')) {
+            embed.addField('Set Backs', props.setBacks, true);
+        }
+
+        if (props.hasOwnProperty('stabs')) {
+            embed.addField('Stabs', props.stabs, true);
+        }
+
+        if (props.hasOwnProperty('captures')) {
+            embed.addField('Captures', props.captures, true);
+        }
+
+        if (props.hasOwnProperty('defends')) {
+            embed.addField('Defends', props.defends, true);
+        }
+
+        if (props.hasOwnProperty('assists')) {
+            embed.addField('Assists', props.assists, true);
+        }
+
+        if (props.hasOwnProperty('confirms')) {
+            embed.addField('Confirms', props.confirms, true);
+        }
+
+        if (props.hasOwnProperty('denies')) {
+            embed.addField('Denies', props.denies, true);
+        }
+
+        if (props.hasOwnProperty('objTime')) {
+            embed.addField('Objective Time', `${(props.objTime / 3600).toFixed(2)}h`, true);
+        }
+
+        if (props.hasOwnProperty('plants')) {
+            embed.addField('Plants', props.plants, true);
+        }
+
+        if (props.hasOwnProperty('defuses')) {
+            embed.addField('Defuses', props.defuses, true);
+        }
+
+        if (props.hasOwnProperty('infected')) {
+            embed.addField('Infected', props.infected, true);
+        }
+
+        return embed;
+    }
 }

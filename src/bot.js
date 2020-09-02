@@ -1,9 +1,10 @@
 import logger from 'winston';
-import {Client, MessageEmbed} from 'discord.js';
-import {MWStats} from './components/mw-stats';
-import {UserDB} from './components/user-db';
+import { Client, MessageEmbed } from 'discord.js';
+import { MWStats } from './components/mw-stats';
+import { UserDB } from './components/user-db';
 import { api, platforms } from 'call-of-duty-api-es6';
 import * as auth from './auth';
+import * as config from './config';
 
 export default class Bot {
     constructor() {
@@ -44,11 +45,28 @@ export default class Bot {
          * This event is triggered when the mw-warzone-bot receives a message.
          */
         this.bot.on('message', async (message) => {
-            if (this.showHelp(message)) {
-                return;
-            }
-            if (!await this.saveUser(message)) {
-                await this.getUserStats(message);
+
+            if (message.author.bot) return;
+
+            if (!message.content.startsWith(config.prefix)) return;
+        
+            const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+            const command = args.shift().toLowerCase();
+            logger.debug(`command: ${command}`);
+        
+            switch (command) {
+                case "help":
+                    this.showHelp(message);
+                    break;
+                case "set":
+                    await this.saveUser(message);
+                    break;
+                case "modes":
+                    await this.getModes(message);
+                    break;
+                default:
+                    await this.getUserStats(message);
+                    break;
             }
         });
 
@@ -68,12 +86,11 @@ export default class Bot {
         const helpMatches = message.content.match(helpRegex);
         if (helpMatches) {
             const embed = new MessageEmbed();
-            embed.setTitle('Modern Warfare bot commands:')
+            embed.setTitle('Modern Warfare Bot')
                 .setColor(0x00AE86)
-                .setDescription('MW Bot lets you get info about your user and some additional global stats')
+                .setDescription('MW Bot lets you get info about your user and some additional global stats. Click the link to go to the GitHub README for how to use the bot.')
                 .setURL('https://github.com/cracker4o/mw-warzone-bot')
-                .addField(`Check out the GitHub README for how to use the bot`)
-                .setFooter(`The MW Api uses data from the callofduty.com API`)
+                .setFooter('The MW Api uses data from the callofduty.com API');
             message.channel.send({ embed });
             return true;
         }
@@ -84,64 +101,57 @@ export default class Bot {
      * Gets user's stats
      */
     async getUserStats(message) {
-        const botRegex = /^\!mw/;
-        const botMatches = message.content.match(botRegex);
-        if (!botMatches) {
-            return;
-        }
-    
         const data = await this.determineUserAndPlatform(message);
 
         if (!data) {
             message.channel.send(new MessageEmbed()
                 .setColor(0x00AE86)
-                .setDescription(`No association found for ${message.author.username}#${message.author.discriminator}. Use '!mw <platform> set <username>' to associate yourself.`));
+                .setDescription(`No association found for ${message.author.username}#${message.author.discriminator}. Use '!mw set <platform> <username>' to associate yourself.`));
             return;
         }
 
         const platform = data.platform;
         const mode = data.mode;
         const username = data.username;
-        
+
         if (!platforms[platform]) {
             logger.warn('Invalid platform');
             return;
         }
-        
+
         logger.debug(`getting ${platform} ${mode} stats for ${username}`);
 
         try {
             const data = await this.API.MWstats(username, platforms[platform]);
-            // logger.info(JSON.stringify(data));
 
-            switch (mode) {
-                case 'lifetime':
-                    const mwStats = new MWStats();
-                    const messageEmbed = mwStats.getLifetimeStats(data);
-                    message.channel.send(messageEmbed);
-                    return;
-                default:
-                    const embed = new MessageEmbed();
-                    embed.setTitle(`Modern Warfare stats for user: ${username}`)
-                        .setColor(0x00AE86)
-                        .setDescription('User Stats:')
-                        .addField("Warzone", JSON.stringify(data.lifetime.mode[mode].properties));
-                    message.channel.send({ embed });
-                    break;
+            if (!mode || mode === 'lifetime') {
+                const mwStats = new MWStats();
+                const messageEmbed = mwStats.getLifetimeStats(data);
+                message.channel.send(messageEmbed);
+                return;
+            } else {
+                const mwStats = new MWStats();
+                if (!mwStats.modes.hasOwnProperty(mode)) {
+                    return message.reply("Invalid gamemode, try: '!mw modes' to see valid gamemodes.");
+                }
+                const embed = mwStats.getStatsForMode(data, mode);
+                message.channel.send({ embed });
+                return;
             }
-        } 
-        catch(err) {
+
+        }
+        catch (err) {
             logger.error(err);
         }
     }
 
     async determineUserAndPlatform(message) {
-        const regex = /^\!mw (battle|psn|xbl|uno) (.* )?(.*)$/;
+        const regex = /^\!mw (.* ) (battle|psn|xbl|uno) (.*)$/;
         const matches = message.content.match(regex);
         if (matches) {
             return {
-                platform: matches[1],
-                mode: matches[2] != null ? matches[2].trim() : 'br_all',
+                mode: matches[1] != null ? matches[1].trim() : 'br_all',
+                platform: matches[2],
                 username: matches[3]
             };
         }
@@ -159,21 +169,27 @@ export default class Bot {
                 };
             }
         }
-        
+    
         return null;
     }
 
     async saveUser(message) {
-        const regex = /^\!mw (battle|psn|xbl|uno) (set) (.*)$/;
+        const regex = /^\!mw set (battle|psn|xbl|uno) (.*)$/;
         const matches = message.content.match(regex);
         if (!matches) {
-            return;
+            return message.reply("Invalid format, try: !mw set <platform> <username>");
         }
         const platform = matches[1];
-        const username = matches[3];
+        const username = matches[2];
         const userDb = new UserDB();
         await userDb.storeUser(message, platform, username);
         return true;
+    }
+
+    getModes(message) {
+        const mwStats = new MWStats();
+        const embed = mwStats.getModes();
+        message.channel.send({ embed });
     }
 }
 
