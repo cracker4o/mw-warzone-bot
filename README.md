@@ -70,7 +70,7 @@ The mode can be one of the following:
 
 Users in Discord can associate themselves with their platform user by using the following command:
 ```
-!mw {platform} set {username}
+!mw set {platform} {username}
 ```
 This will allow the use of all of the bot's commands without having to input your user and platform each time.
 e.g.:
