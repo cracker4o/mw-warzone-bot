@@ -5,6 +5,7 @@ import { UserDB } from './components/user-db';
 import { api, platforms } from 'call-of-duty-api-es6';
 import * as auth from './auth';
 import * as config from './config';
+import commands from './commands/commands';
 
 export default class Bot {
     constructor() {
@@ -50,23 +51,25 @@ export default class Bot {
 
             if (!message.content.startsWith(config.prefix)) return;
         
-            const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+            const args = message.content
+                .slice(config.prefix.length)
+                .trim()
+                .split(/ +/g);
+
             const command = args.shift().toLowerCase();
             logger.debug(`command: ${command}`);
-        
-            switch (command) {
-                case "help":
-                    this.showHelp(message);
-                    break;
-                case "set":
-                    await this.saveUser(message);
-                    break;
-                case "modes":
-                    await this.getModes(message);
-                    break;
-                default:
-                    await this.getUserStats(message);
-                    break;
+            let commandExecution = false;
+            // The following code dynamically gathers all commands and matches the command string.
+            // If the command string is a match, then it executes the command.
+            commands.forEach(async cmd => {
+                if (cmd.getCommand() === command) {
+                    commandExecution = await cmd.create(message, logger).execute();
+                    return;
+                }
+            })
+
+            if (!commandExecution) {
+                await this.getUserStats(message);
             }
         });
 
@@ -76,25 +79,6 @@ export default class Bot {
         this.bot.login(auth.token).catch(error => {
             logger.error(error);
         });        
-    }
-
-    /**
-     * Shows the available commands
-     */
-    showHelp(message) {
-        const helpRegex = /^!mw (help|commands)(.*)?$/;
-        const helpMatches = message.content.match(helpRegex);
-        if (helpMatches) {
-            const embed = new MessageEmbed();
-            embed.setTitle('Modern Warfare Bot')
-                .setColor(0x00AE86)
-                .setDescription('MW Bot lets you get info about your user and some additional global stats. Click the link to go to the GitHub README for how to use the bot.')
-                .setURL('https://github.com/cracker4o/mw-warzone-bot')
-                .setFooter('The MW Api uses data from the callofduty.com API');
-            message.channel.send({ embed });
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -146,7 +130,7 @@ export default class Bot {
     }
 
     async determineUserAndPlatform(message) {
-        const regex = /^\!mw (.* ) (battle|psn|xbl|uno) (.*)$/;
+        const regex = /^\!mw (.*) (battle|psn|xbl|uno) (.*)$/;
         const matches = message.content.match(regex);
         if (matches) {
             return {
@@ -171,25 +155,6 @@ export default class Bot {
         }
     
         return null;
-    }
-
-    async saveUser(message) {
-        const regex = /^\!mw set (battle|psn|xbl|uno) (.*)$/;
-        const matches = message.content.match(regex);
-        if (!matches) {
-            return message.reply("Invalid format, try: !mw set <platform> <username>");
-        }
-        const platform = matches[1];
-        const username = matches[2];
-        const userDb = new UserDB();
-        await userDb.storeUser(message, platform, username);
-        return true;
-    }
-
-    getModes(message) {
-        const mwStats = new MWStats();
-        const embed = mwStats.getModes();
-        message.channel.send({ embed });
     }
 }
 
