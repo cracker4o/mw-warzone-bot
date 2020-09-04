@@ -28,6 +28,7 @@
     "@babel/core": "^7.11.4",
     "@babel/preset-env": "^7.11.0",
     "babel-loader": "^8.1.0",
+    "babel-plugin-wildcard": "^6.0.0",
     "call-of-duty-api-es6": "0.0.7",
     "discord.js": "^12.2.0",
     "encoding": "^0.1.13",
