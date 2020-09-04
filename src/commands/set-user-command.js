@@ -26,10 +26,10 @@ export class SetUserCommand {
         try {
             await userDb.storeUser(this.message, platform, username);
 
-            return true;
+            return Promise.resolve(true);;
         } catch (error) {
             this.logger.error(error);
-            return false;
+            return Promise.resolve(false);;
         }
     }
 

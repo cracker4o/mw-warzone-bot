@@ -15,10 +15,16 @@ export class GetModesCommand {
     }
 
     execute() {
-        const mwStats = new MWStats();
-        const embed = mwStats.getModes();
-        this.message.channel.send({ embed });
+        try {
+            const mwStats = new MWStats();
+            const embed = mwStats.getModes();
+            this.message.channel.send({ embed });
+            
+            return Promise.resolve(true);
+        } catch (error) {
+            this.logger.error(error);
 
-        return true;
+            return Promise.resolve(false);
+        }        
     }
 }

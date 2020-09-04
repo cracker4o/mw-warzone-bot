@@ -61,14 +61,15 @@ export default class Bot {
             let commandExecution = false;
             // The following code dynamically gathers all commands and matches the command string.
             // If the command string is a match, then it executes the command.
-            commands.forEach(async cmd => {
+            await this.asyncForEach(commands, async cmd => {
                 if (cmd.getCommand() === command) {
-                    commandExecution = await cmd.create(message, logger).execute();
+                    const action = cmd.create(message, logger)
+                    commandExecution = await action.execute();
                     return;
                 }
-            })
+            });
 
-            if (!commandExecution) {
+            if (commandExecution === false) {
                 await this.getUserStats(message);
             }
         });
@@ -156,6 +157,12 @@ export default class Bot {
     
         return null;
     }
+
+    async asyncForEach(array, callback) {
+        for (let index = 0; index < array.length; index++) {
+          await callback(array[index], index, array);
+        }
+    }    
 }
 
 // Start the bot
