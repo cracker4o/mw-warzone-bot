@@ -45,7 +45,7 @@ export class CompareCommand {
                 .addField("Most Kills", this.getOrderedPropertyString(stats, "lifetime.all.properties.bestKills", false), true)
                 .addField("Most Deaths", this.getOrderedPropertyString(stats, "lifetime.all.properties.recordDeathsInAMatch", false), true)
                 .addField("Best Killstreak", this.getOrderedPropertyString(stats, "lifetime.all.properties.bestKillStreak", false), true)
-                .addField("Longest Winstream", this.getOrderedPropertyString(stats, "lifetime.all.properties.recordLongestWinStreak", false), true)
+                .addField("Longest Winstreak", this.getOrderedPropertyString(stats, "lifetime.all.properties.recordLongestWinStreak", false), true)
                 .setFooter("Don't see your name? Make sure you associate yourself with the bot: !mw set");
 
             this.message.channel.send({ embed });
