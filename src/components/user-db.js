@@ -44,4 +44,16 @@ export class UserDB {
             });
         });
     }
+
+    async getUsers(ids) {
+        return new Promise((resolve, reject) => {
+            this.db.find({ _id: { $in: ids }}, function (err, docs) {
+                if (err) {
+                    reject(err.message);
+                } else {
+                    resolve(docs);
+                }
+            });
+        });
+    }
 }

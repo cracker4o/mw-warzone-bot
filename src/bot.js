@@ -63,7 +63,7 @@ export default class Bot {
             // If the command string is a match, then it executes the command.
             await this.asyncForEach(commands, async cmd => {
                 if (cmd.getCommand() === command) {
-                    const action = cmd.create(message, logger)
+                    const action = cmd.create(message, logger, this.bot)
                     commandExecution = await action.execute();
                     return;
                 }
