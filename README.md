@@ -40,31 +40,31 @@ uno (activision ID)
 
 To check the user stats for a specific game mode you can use the following command:
 ```
-!mw {platform} {username} {mode}
+!mw {mode} {platform} {username}
 ```
 
 The mode can be one of the following:
-"gun",
-"dom",
-"war",
-"hq",
-"hc_dom",
-"hc_conf",
-"koth",
-"conf",
-"hc_hq",
-"arena",
-"br_dmz",
-"br",
-"sd",
-"grnd",
-"cyber",
-"hc_war",
-"br_all",
-"hc_sd",
-"arm",
-"hc_cyber",
-"infect"
+gun: 'Gun Fight',
+dom: 'Domination',
+war: 'Team Deathmatch',
+hq: 'Headquarters',
+hc_dom: 'Domination Hardcore',
+hc_conf: 'Kill Confirmed Hardcore',
+koth: 'Hardpoint',
+conf: 'Kill Confirmed',
+hc_hq: 'Headquarters Hardcore',
+arena: '2v2',
+br_dmz: 'Plunder',
+br: 'Warzone',
+sd: 'Search and Destroy',
+grnd: 'Grind',
+cyber: 'Cyber Attack',
+hc_war: 'Team Deathmatch Hardcore',
+br_all: 'Warzone',
+hc_sd: 'Search and Destroy Hardcore',
+arm: 'Ground War',
+hc_cyber: 'Cyber Attack Hardcore',
+infect: 'Infected'
 
 # Associate Users
 
